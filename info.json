@@ -1,0 +1,11 @@
+{
+    "name": "module_updater",
+    "version": "0.0.1",
+    "title": "Module updater",
+    "author": "Depressdog",
+    "description": "This mod automatically updates modules in assemblers, mining drills, and other entities. Perfect for players who want to maximize efficiency without manual module swapping.",
+    "factorio_version": "2.0",
+    "dependencies": [
+        "base >= 2.0"
+    ]
+}
