@@ -89,13 +89,88 @@ upgrade_table = upgrade_table or {
             }
         }
 upgrade_entities = {"big-mining-drill", "electric-mining-drill", "assembling-machine-1", "assembling-machine-2", "assembling-machine-3", "lab", "beacon", "centrifuge", "oil-refinery", "chemical-plant", "electromagnetic-plant", "cryogenic-plant", "rocket-silo"}
-index = 1
+chest_names = {"storage-chest", "active-provider-chest", "passive-provider-chest", "buffer-chest"}
+
+surface_index = surface_index or 1
+entity_index = 0
+chest_index = chest_index or 1
+container_index = container_index or 1
+inventory_index = inventory_index or 1
+item_index = item_index or 1
+
+current_items = current_items or {}
+current_containers = current_containers or {} 
+current_surface = current_surface or {}
+
 script.on_event(defines.events.on_tick, function(event)
-    local surfaces = game.surfaces
-    for _, surface in pairs(surfaces) do
-        local param_name = upgrade_entities[index]
-        local entities = surface.find_entities_filtered{name = param_name}
-        for _, entity in ipairs(entities) do
+    if #current_surface == 0 then
+        current_surface = game.surfaces
+    end
+    
+    local surface = current_surface[surface_index]
+
+    if entity_index == 0 then
+        local chest_name = chest_names[chest_index]
+        if #current_containers == 0 then
+            current_containers = surface.find_entities_filtered{name = chest_name}
+        end
+
+        if #current_containers > 0 then
+            local container = current_containers[container_index]
+            local inv = container.get_inventory(defines.inventory.chest)
+            if inv and inv.valid then
+                local contents = inv.get_contents()
+                local content = contents[inventory_index]
+                if content and entities_table[content.name] then
+                    
+                    local current_name = content.name
+                    local current_quality = content.quality
+
+                    local entity_max_name = entities_table[current_name].entity_max_name
+                    local up_key, up_value = next(upgrade_table[entity_max_name])
+
+                    local entity_to_nil = entities_table[content.name].to_nil
+
+                    local new_name_value = module_table[current_name] or 1
+                    local new_quality_value = quality_table[current_quality] or 1
+
+                    local old_name_value = module_table[up_key] or 1
+                    local old_quality_value = quality_table[up_value] or 1
+
+                    
+
+                    if new_name_value > old_name_value and new_quality_value >= old_quality_value then 
+                        set_upgrade_table(content, entities_table[content.name].entity_max_name, entities_table[content.name].to_nil)
+                    elseif new_quality_value > old_quality_value and new_name_value == old_name_value then
+                        set_upgrade_table(content, entities_table[content.name].entity_max_name, entities_table[content.name].to_nil)
+                    end
+                end
+                inventory_index = inventory_index + 1
+                if inventory_index > #contents then
+                    inventory_index = 1 
+                    container_index = container_index + 1
+                end
+            end
+            if container_index > #current_containers then
+                container_index = 1 
+                chest_index  = chest_index + 1
+                current_containers = {}
+            end
+        else 
+            entity_index = entity_index + 1
+        end
+        if chest_index > #chest_names then
+            chest_index = 1
+            entity_index = entity_index + 1
+        end
+    else
+        local param_name = upgrade_entities[entity_index]
+        if #current_items == 0 then
+            current_items = surface.find_entities_filtered{name = param_name}
+        end
+
+        if #current_items > 0 then
+            local entity = current_items[item_index]
             local module_inventory = entity.get_module_inventory()
             local inventory_define = inventory_type_table[entity.type]
             local insert_plan = {}
@@ -155,26 +230,25 @@ script.on_event(defines.events.on_tick, function(event)
                     entity.surface.create_entity(create_info)
                 end
             end
-        end
 
-
-
-        index = index + 1
-        if index > #upgrade_entities then index = 1 end
-        if event.tick % 300 == 0 then
-            local logistic_containers = surface.find_entities_filtered{type = "logistic-container"}
-            for _, storage in ipairs(logistic_containers) do
-                local inv = storage.get_inventory(defines.inventory.chest)
-                if inv and inv.valid then
-                    local contents = inv.get_contents()
-                    for _, v in pairs(contents) do
-                        if entities_table[v.name] then
-                            set_upgrade_table(v, entities_table[v.name].entity_max_name, entities_table[v.name].to_nil)
-                        end
-                    end
-                end
+            item_index = item_index + 1
+            if item_index > #current_items then
+                item_index = 1
+                entity_index = entity_index + 1
+                current_items = {}
             end
+        else 
+            entity_index = entity_index + 1
         end
+
+        if entity_index > #upgrade_entities then
+            entity_index = 0
+            surface_index = surface_index + 1
+        end
+    end
+    if surface_index > #current_surface then 
+        surface_index = 1 
+        current_surface = {}
     end
 end)
 
