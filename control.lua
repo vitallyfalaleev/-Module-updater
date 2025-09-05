@@ -126,8 +126,8 @@ script.on_event(defines.events.on_tick, function(event)
                     local current_name = content.name
                     local current_quality = content.quality
 
-                    local entiry_max_name = entities_table[current_name].entity_max_name
-                    local up_key, up_value = next(upgrade_table[entiry_max_name])
+                    local entity_max_name = entities_table[current_name].entity_max_name
+                    local up_key, up_value = next(upgrade_table[entity_max_name])
 
                     local entity_to_nil = entities_table[content.name].to_nil
 
