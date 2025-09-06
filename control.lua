@@ -88,7 +88,7 @@ upgrade_table = upgrade_table or {
                 ["productivity-module"] = "normal"
             }
         }
-upgrade_entities = {"big-mining-drill", "electric-mining-drill", "assembling-machine-1", "assembling-machine-2", "assembling-machine-3", "lab", "beacon", "centrifuge", "oil-refinery", "chemical-plant", "electromagnetic-plant", "cryogenic-plant", "rocket-silo"}
+upgrade_entities = {"big-mining-drill", "electric-mining-drill", "assembling-machine-2", "assembling-machine-3", "lab", "beacon", "centrifuge", "oil-refinery", "chemical-plant", "electromagnetic-plant", "cryogenic-plant", "rocket-silo"}
 chest_names = {"storage-chest", "active-provider-chest", "passive-provider-chest", "buffer-chest"}
 
 surface_index = surface_index or 1
