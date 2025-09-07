@@ -171,63 +171,65 @@ script.on_event(defines.events.on_tick, function(event)
 
         if #current_items > 0 then
             local entity = current_items[item_index]
-            local module_inventory = entity.get_module_inventory()
-            local inventory_define = inventory_type_table[entity.type]
-            local insert_plan = {}
-            local removal_plan = {}
+            if entity.valid then
+                local module_inventory = entity.get_module_inventory()
+                local inventory_define = inventory_type_table[entity.type]
+                local insert_plan = {}
+                local removal_plan = {}
 
-            if not entity.item_request_proxy then
-                local update_needed = {}
-                for i = 1, #module_inventory do
-                    local stack = module_inventory[i]
-                    if stack.valid_for_read then
-                        local current_name = stack.name
-                        local current_quality = stack.quality.name
-                        local entiry_max_name = entities_table[current_name]["entity_max_name"]
-                        local entity_name, entity_quality = next(upgrade_table[entiry_max_name])
-                        local new_name_value = module_table[entity_name] or 1
-                        local new_quality_value = quality_table[entity_quality] or 1
-                        local old_name_value = module_table[current_name] or 1
-                        local old_quality_value = quality_table[current_quality] or 1
+                if not entity.item_request_proxy then
+                    local update_needed = {}
+                    for i = 1, #module_inventory do
+                        local stack = module_inventory[i]
+                        if stack.valid_for_read then
+                            local current_name = stack.name
+                            local current_quality = stack.quality.name
+                            local entiry_max_name = entities_table[current_name]["entity_max_name"]
+                            local entity_name, entity_quality = next(upgrade_table[entiry_max_name])
+                            local new_name_value = module_table[entity_name] or 1
+                            local new_quality_value = quality_table[entity_quality] or 1
+                            local old_name_value = module_table[current_name] or 1
+                            local old_quality_value = quality_table[current_quality] or 1
 
 
-                        if new_name_value == old_name_value and old_quality_value == new_quality_value then
-                            update_needed[i] = false
+                            if new_name_value == old_name_value and old_quality_value == new_quality_value then
+                                update_needed[i] = false
+                            end
+                            if new_name_value == old_name_value and old_quality_value < new_quality_value then
+                                update_needed[i] = true
+                                removal_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = current_quality }, i, inventory_define)
+                                insert_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = entity_quality }, i, inventory_define)
+                            end
+                            if new_name_value > old_name_value and old_quality_value < new_quality_value then
+                                update_needed[i] = true
+                                removal_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
+                                insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
+                            end
+                            if new_name_value > old_name_value and old_quality_value == new_quality_value then
+                                update_needed[i] = true
+                                removal_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
+                                insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
+                            end
+                            if new_name_value > old_name_value and old_quality_value > new_quality_value then
+                                update_needed[i] = true
+                                removal_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = current_quality }, i, inventory_define)
+                                insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
+                            end
                         end
-                        if new_name_value == old_name_value and old_quality_value < new_quality_value then
-                            update_needed[i] = true
-                            removal_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = current_quality }, i, inventory_define)
-                            insert_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = entity_quality }, i, inventory_define)
-                        end
-                        if new_name_value > old_name_value and old_quality_value < new_quality_value then
-                            update_needed[i] = true
-                            removal_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
-                            insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
-                        end
-                        if new_name_value > old_name_value and old_quality_value == new_quality_value then
-                            update_needed[i] = true
-                            removal_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
-                            insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
-                        end
-                        if new_name_value > old_name_value and old_quality_value > new_quality_value then
-                            update_needed[i] = true
-                            removal_plan[i] = createBlueprintInsertPlan({ name = current_name, quality = current_quality }, i, inventory_define)
-                            insert_plan[i] = createBlueprintInsertPlan({ name = entity_name, quality = entity_quality }, i, inventory_define)
-                        end
+
                     end
-
-                end
-                local create_info = {
-                    name = "item-request-proxy",
-                    position = entity.position,
-                    force = entity.force,
-                    target = entity,
-                    modules = insert_plan,
-                    removal_plan = removal_plan,
-                    raise_built = true
-                }
-                if array_contains_word(update_needed, true) then
-                    entity.surface.create_entity(create_info)
+                    local create_info = {
+                        name = "item-request-proxy",
+                        position = entity.position,
+                        force = entity.force,
+                        target = entity,
+                        modules = insert_plan,
+                        removal_plan = removal_plan,
+                        raise_built = true
+                    }
+                    if array_contains_word(update_needed, true) then
+                        entity.surface.create_entity(create_info)
+                    end
                 end
             end
 

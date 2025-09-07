@@ -1,6 +1,6 @@
 {
     "name": "module_updater",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "title": "Module updater",
     "author": "Depressdog",
     "description": "This mod automatically updates modules in assemblers, mining drills, and other entities. Perfect for players who want to maximize efficiency without manual module swapping.",
